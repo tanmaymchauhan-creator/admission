@@ -1,0 +1,248 @@
+<?php
+require_once '../includes/db_connect.php';
+require_once '../includes/auth.php';
+
+
+check_access('staff');
+
+$course_filter = isset($_GET['course_filter']) ? trim($_GET['course_filter']) : '';
+$status_filter = isset($_GET['status_filter']) ? trim($_GET['status_filter']) : '';
+
+
+
+
+if (isset($_GET['export']) && $_GET['export'] === 'csv') {
+    try {
+
+        $export_query = "
+            SELECT s.admission_no, s.full_name, s.father_name, s.mother_name, s.gender, s.dob, s.category, 
+                   s.mobile, s.email, s.tenth_percentage, s.twelfth_percentage, 
+                   s.school_name, s.passing_year, c.course_name, s.status, s.created_at
+            FROM students s 
+            LEFT JOIN courses c ON s.course_id = c.course_id 
+            WHERE s.is_submitted = 1
+        ";
+        $export_params = [];
+
+        if (!empty($course_filter)) {
+            $export_query .= " AND s.course_id = :course_filter";
+            $export_params['course_filter'] = $course_filter;
+        }
+
+        if (!empty($status_filter)) {
+            $export_query .= " AND s.status = :status_filter";
+            $export_params['status_filter'] = $status_filter;
+        }
+
+        $export_query .= " ORDER BY s.student_id DESC";
+
+        $stmt = $pdo->prepare($export_query);
+        $stmt->execute($export_params);
+        $records = $stmt->fetchAll();
+
+
+        ob_end_clean();
+
+
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename=Student_Admission_Report_' . date('Ymd_His') . '.csv');
+
+
+        $output = fopen('php://output', 'w');
+
+
+        fputcsv($output, [
+            'Admission ID',
+            'Full Name',
+            "Father's Name",
+            "Mother's Name",
+            'Gender',
+            'DOB',
+            'Category',
+            'Mobile',
+            'Email',
+            '10th %',
+            '12th %',
+            'School Name',
+            'Passing Year',
+            'Course Selected',
+            'Status',
+            'Date Submitted'
+        ]);
+
+
+        foreach ($records as $row) {
+            fputcsv($output, [
+                $row['admission_no'],
+                $row['full_name'],
+                $row['father_name'],
+                $row['mother_name'],
+                $row['gender'],
+                $row['dob'],
+                $row['category'],
+                $row['mobile'],
+                $row['email'],
+                $row['tenth_percentage'],
+                $row['twelfth_percentage'],
+                $row['school_name'],
+                $row['passing_year'],
+                $row['course_name'],
+                $row['status'],
+                $row['created_at']
+            ]);
+        }
+
+        fclose($output);
+        exit;
+    } catch (PDOException $e) {
+        die("Export Error: " . $e->getMessage());
+    }
+}
+
+
+
+
+try {
+
+    $courses = $pdo->query("SELECT * FROM courses ORDER BY course_name ASC")->fetchAll();
+
+
+    $list_query = "
+        SELECT s.*, c.course_name 
+        FROM students s 
+        LEFT JOIN courses c ON s.course_id = c.course_id 
+        WHERE s.is_submitted = 1
+    ";
+    $list_params = [];
+
+    if (!empty($course_filter)) {
+        $list_query .= " AND s.course_id = :course_filter";
+        $list_params['course_filter'] = $course_filter;
+    }
+
+    if (!empty($status_filter)) {
+        $list_query .= " AND s.status = :status_filter";
+        $list_params['status_filter'] = $status_filter;
+    }
+
+    $list_query .= " ORDER BY s.student_id DESC";
+
+    $stmt = $pdo->prepare($list_query);
+    $stmt->execute($list_params);
+    $applicants = $stmt->fetchAll();
+} catch (PDOException $e) {
+    die("Database Error: " . $e->getMessage());
+}
+
+$page_title = "Admission Reports";
+include '../includes/header.php';
+?>
+
+<div class="wrapper">
+
+    <?php include '../includes/sidebar.php'; ?>
+
+
+    <div id="content">
+        <?php render_topbar(); ?>
+
+        <div class="container-fluid">
+            <?php render_page_header('Reports & Audits'); ?>
+
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form action="reports.php" method="GET" class="row g-3 align-items-end">
+
+                        <div class="col-md-4">
+                            <label for="course_filter" class="form-label">Filter by Course</label>
+                            <select class="form-select form-control" id="course_filter" name="course_filter">
+                                <option value="">All Courses</option>
+                                <?php foreach ($courses as $c): ?>
+                                    <option value="<?php echo $c['course_id']; ?>" <?php echo ($course_filter == $c['course_id']) ? 'selected' : ''; ?>>
+                                        <?php echo e($c['course_name']); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="status_filter" class="form-label">Filter by Status</label>
+                            <select class="form-select form-control" id="status_filter" name="status_filter">
+                                <option value="">All Statuses</option>
+                                <option value="Pending" <?php echo ($status_filter === 'Pending') ? 'selected' : ''; ?>>Pending</option>
+                                <option value="Approved" <?php echo ($status_filter === 'Approved') ? 'selected' : ''; ?>>Approved</option>
+                                <option value="Rejected" <?php echo ($status_filter === 'Rejected') ? 'selected' : ''; ?>>Rejected</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-4 d-flex gap-2">
+                            <button type="submit" class="btn btn-primary flex-grow-1 py-2">
+                                <i class="fa-solid fa-arrows-rotate me-1"></i>Apply Filters
+                            </button>
+
+                            <a href="reports.php?course_filter=<?php echo $course_filter; ?>&status_filter=<?php echo $status_filter; ?>&export=csv" class="btn btn-success py-2 px-3" title="Export to CSV">
+                                <i class="fa-solid fa-file-csv fs-5"></i> Export
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+
+            <div class="card">
+                <div class="card-header">
+                    <i class="fa-solid fa-file-invoice me-2"></i>Admission Records List
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Admission ID</th>
+                                    <th>Student Name</th>
+                                    <th>Applied Course</th>
+                                    <th>Gender</th>
+                                    <th>10th Std (%)</th>
+                                    <th>12th Std (%)</th>
+                                    <th>Status</th>
+                                    <th>Date Applied</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (empty($applicants)): ?>
+                                    <tr>
+                                        <td colspan="8" class="text-center text-muted py-4">No matching applicants found.</td>
+                                    </tr>
+                                <?php else: ?>
+                                    <?php foreach ($applicants as $app): ?>
+                                        <tr>
+                                            <td class="fw-bold text-primary"><?php echo e($app['admission_no']); ?></td>
+                                            <td><?php echo e($app['full_name']); ?></td>
+                                            <td><?php echo e($app['course_name']); ?></td>
+                                            <td><?php echo e($app['gender']); ?></td>
+                                            <td><?php echo e($app['tenth_percentage']); ?>%</td>
+                                            <td><?php echo e($app['twelfth_percentage']); ?>%</td>
+                                            <td>
+                                                <?php if ($app['status'] === 'Pending'): ?>
+                                                    <span class="badge badge-pending">Pending</span>
+                                                <?php elseif ($app['status'] === 'Approved'): ?>
+                                                    <span class="badge badge-approved">Approved</span>
+                                                <?php elseif ($app['status'] === 'Rejected'): ?>
+                                                    <span class="badge badge-rejected">Rejected</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td class="small text-muted"><?php echo date('d-M-Y', strtotime($app['created_at'])); ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<?php include '../includes/footer.php'; ?>

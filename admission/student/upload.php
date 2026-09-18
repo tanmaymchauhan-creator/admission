@@ -61,14 +61,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!file_exists($target_dir)) {
             mkdir($target_dir, 0755, true);
 
-            file_put_to_file($target_dir . "index.html", "Access Denied");
+            file_put_contents($target_dir . "index.html", "Access Denied");
         }
-    }
-
-
-    function file_put_to_file($file, $data)
-    {
-        file_put_contents($file, $data);
     }
 
     foreach ($fields as $field) {

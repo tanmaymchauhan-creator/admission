@@ -41,7 +41,9 @@ if (isset($_GET['export']) && $_GET['export'] === 'csv') {
         $records = $stmt->fetchAll();
 
 
-        ob_end_clean();
+        if (ob_get_level()) {
+            ob_end_clean();
+        }
 
 
         header('Content-Type: text/csv; charset=utf-8');

@@ -125,7 +125,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 exit;
             }
         } catch (PDOException $e) {
-            $pdo->rollBack();
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
             $error_msg = "Update Failed: " . $e->getMessage();
         }
     }

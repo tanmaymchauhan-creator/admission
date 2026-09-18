@@ -34,7 +34,7 @@ try {
 }
 
 
-if (isset($_POST['action']) && $_POST['action'] === 'final_submit' && $has_form && $has_docs && $student['is_submitted'] == 0) {
+if (isset($_POST['action']) && $_POST['action'] === 'final_submit' && $has_form && $has_docs && $student['payment_status'] === 'Paid' && $student['is_submitted'] == 0) {
     try {
         $pdo->beginTransaction();
 
@@ -52,7 +52,9 @@ if (isset($_POST['action']) && $_POST['action'] === 'final_submit' && $has_form 
         header("Location: dashboard.php?msg=submitted");
         exit;
     } catch (PDOException $e) {
-        $pdo->rollBack();
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
         $error_msg = "Failed to submit application: " . $e->getMessage();
     }
 }
@@ -80,7 +82,7 @@ include '../includes/header.php';
             <?php endif; ?>
             <?php if (isset($_GET['msg']) && $_GET['msg'] === 'paid'): ?>
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    <i class="fa-solid fa-circle-check me-2"></i>Your processing fee payment of â‚¹500.00 has been recorded successfully! You can now finalize and submit your application.
+                    <i class="fa-solid fa-circle-check me-2"></i>Your processing fee payment of ₹500.00 has been recorded successfully! You can now finalize and submit your application.
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             <?php endif; ?>
@@ -206,7 +208,7 @@ include '../includes/header.php';
                                 </div>
                             </div>
                             <div class="status-body-premium">
-                                <p>Your details and documents are successfully compiled. You must now complete the online fee payment of â‚¹500.00 to submit your application.</p>
+                                <p>Your details and documents are successfully compiled. You must now complete the online fee payment of ₹500.00 to submit your application.</p>
                             </div>
                             <div class="status-action-row-premium">
                                 <a href="payment.php" class="btn btn-primary"><i class="fa-solid fa-credit-card me-2"></i>Pay Fees Now</a>

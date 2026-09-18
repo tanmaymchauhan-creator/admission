@@ -60,11 +60,15 @@ if (isset($_GET['delete_id']) && !empty($_GET['delete_id'])) {
             $pdo->commit();
             $success_msg = "Student and all linked account records/files deleted successfully.";
         } else {
-            $pdo->rollBack();
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
             $error_msg = "Student record not found.";
         }
     } catch (PDOException $e) {
-        $pdo->rollBack();
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
         $error_msg = "Failed to delete student: " . $e->getMessage();
     }
 }
@@ -156,7 +160,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 $edit_id = 0;
             }
         } catch (PDOException $e) {
-            $pdo->rollBack();
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
             $error_msg = "Update Failed: " . $e->getMessage();
         }
     }
@@ -190,7 +196,7 @@ try {
     if (!empty($search)) {
         $list_sql .= " AND (s.admission_no LIKE :search1 
                       OR s.full_name LIKE :search2 
-                      OR CAST(s.mobile AS TEXT) LIKE :search3)";
+                      OR s.mobile LIKE :search3)";
         $list_params['search1'] = "%$search%";
         $list_params['search2'] = "%$search%";
         $list_params['search3'] = "%$search%";

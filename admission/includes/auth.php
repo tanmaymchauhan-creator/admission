@@ -103,12 +103,16 @@ function session_account_exists($pdo)
         return true;
     }
 
-    $source = account_source_for_role($_SESSION['role']);
-    $sql = "SELECT {$source['id']} FROM {$source['table']} WHERE {$source['id']} = :id";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute(['id' => $_SESSION['user_id']]);
+    try {
+        $source = account_source_for_role($_SESSION['role']);
+        $sql = "SELECT {$source['id']} FROM {$source['table']} WHERE {$source['id']} = :id";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute(['id' => $_SESSION['user_id']]);
 
-    return (bool) $stmt->fetchColumn();
+        return (bool) $stmt->fetchColumn();
+    } catch (Exception $e) {
+        return true;
+    }
 }
 
 function check_access($allowed_roles)

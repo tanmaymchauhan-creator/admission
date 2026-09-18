@@ -169,6 +169,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'course_id' => $course_id
                     ]);
 
+                    $new_student_id = $pdo->lastInsertId();
+                    $ins_docs = $pdo->prepare("INSERT INTO documents (student_id) VALUES (:student_id)");
+                    $ins_docs->execute(['student_id' => $new_student_id]);
+
                     $success_msg = "Details submitted successfully. Please proceed to upload certificates.";
                 }
 

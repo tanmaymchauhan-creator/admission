@@ -110,7 +110,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 header("Location: dashboard.php?msg=rejected");
                 exit;
             } catch (PDOException $e) {
-                $pdo->rollBack();
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
                 $error_msg = "Transaction failed: " . $e->getMessage();
             }
         }

@@ -137,7 +137,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
         } catch (PDOException $e) {
-            $pdo->rollBack();
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
             $error_msg = "Database Error: " . $e->getMessage();
         }
     }

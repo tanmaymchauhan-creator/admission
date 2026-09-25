@@ -180,16 +180,38 @@ a:hover {
 }
 
 #sidebar ul li.disabled > a,
-#sidebar ul li.disabled > a:hover {
-  color: var(--slate-300) !important;
+#sidebar ul li.locked > a,
+#sidebar ul li a.disabled-nav-link,
+#sidebar ul li.disabled > a:hover,
+#sidebar ul li.locked > a:hover,
+#sidebar ul li a.disabled-nav-link:hover {
+  color: #94a3b8 !important;
   background: transparent !important;
   cursor: not-allowed !important;
   transform: none !important;
-  opacity: 0.6;
+  opacity: 0.65;
 }
 
-#sidebar ul li.disabled > a i {
-  color: var(--slate-300) !important;
+#sidebar ul li.disabled > a i.sidebar-left-icon,
+#sidebar ul li.locked > a i.sidebar-left-icon,
+#sidebar ul li a.disabled-nav-link i.sidebar-left-icon {
+  color: #94a3b8 !important;
+}
+
+.sidebar-status-icon {
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.sidebar-status-icon .text-success {
+  color: #16a34a !important;
+}
+
+.sidebar-status-icon .text-muted {
+  color: #94a3b8 !important;
 }
 
 .nav-divider {

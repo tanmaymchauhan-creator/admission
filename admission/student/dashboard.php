@@ -409,7 +409,7 @@ include '../includes/header.php';
                             <div class="card-body">
                                 <div class="text-center mb-4">
                                     <?php if ($documents && !empty($documents['photo'])): ?>
-                                        <img src="uploads/photo/<?php echo e($documents['photo']); ?>" 
+                                        <img src="../uploads/photo/<?php echo e($documents['photo']); ?>" 
                                              alt="<?php echo e($student['full_name']); ?>" 
                                              class="border border-3 border-primary shadow-sm rounded" 
                                              style="width: 120px; height: 120px; object-fit: cover;">

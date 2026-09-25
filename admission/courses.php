@@ -100,6 +100,31 @@ $page_title = "Academic Courses & Programs";
 include 'includes/header.php';
 ?>
 
+<style>
+.course-card-clickable {
+    cursor: pointer;
+    transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+    border: 1px solid #e2e8f0 !important;
+    background: #ffffff;
+    user-select: none;
+}
+.course-card-clickable:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08) !important;
+    border-color: #3b82f6 !important;
+}
+.course-card-clickable:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+}
+.course-card-clickable .course-arrow-icon {
+    transition: transform 0.2s ease;
+}
+.course-card-clickable:hover .course-arrow-icon {
+    transform: translateX(4px);
+}
+</style>
+
 <!-- Course Page Header Banner -->
 <div class="bg-white border-bottom py-4 shadow-sm">
     <div class="container">
@@ -149,47 +174,132 @@ include 'includes/header.php';
         </div>
     <?php else: ?>
         <div class="row g-4" id="courseCardList">
-            <?php foreach ($courses_from_db as $course):
+            <?php foreach ($courses_from_db as $index => $course):
                 $c_name = $course['course_name'];
                 $full_name = $course_full_names[$c_name] ?? $c_name;
                 $details = $course_details_map[$full_name] ?? $course_details_map[$c_name] ?? $default_details;
+                $modal_id = !empty($course['course_id']) ? $course['course_id'] : ($index + 1);
             ?>
                 <div class="col-md-6 col-lg-4 course-item"
                     data-dept="<?php echo e($course['department']); ?>"
                     data-search="<?php echo e(strtolower($full_name . ' ' . $c_name . ' ' . $course['department'] . ' ' . implode(' ', $details['curriculum']))); ?>">
-                    <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden d-flex flex-column">
-                        <div class="card-body p-4 d-flex flex-column">
-                            <div class="d-flex align-items-center justify-content-between mb-3">
-                                <span class="badge bg-primary text-white px-2.5 py-1 rounded-pill small"><?php echo e($course['department']); ?></span>
+                    <div class="card h-100 border-0 shadow-sm rounded-4 course-card-clickable p-4 d-flex flex-column justify-content-between"
+                        data-bs-toggle="modal"
+                        data-bs-target="#courseModal_<?php echo $modal_id; ?>"
+                        role="button"
+                        tabindex="0"
+                        aria-haspopup="dialog"
+                        aria-label="<?php echo e($full_name); ?> - Click to view details">
+                        <div>
+                            <h4 class="card-title fw-bold text-dark mb-3 fs-5"><?php echo e($full_name); ?></h4>
+                            <div class="text-muted small d-flex align-items-center">
+                                <i class="fa-regular fa-clock me-2 text-primary fs-6"></i>
+                                <span><strong>Duration:</strong> <?php echo e($details['duration']); ?></span>
                             </div>
+                        </div>
+                        <div class="mt-1 pt-2 border-top d-flex align-items-center justify-content-between text-primary small fw-semibold course-view-link">
+                            <span>View Details</span>
+                            <i class="fa-solid fa-arrow-right course-arrow-icon"></i>
+                        </div>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
 
-                            <div class="d-flex align-items-center gap-3 mb-3">
-                                <div class="rounded-circle bg-light d-flex align-items-center justify-content-center flex-shrink-0" style="width: 48px; height: 48px; font-size: 20px;">
-                                    <i class="fa-solid <?php echo e($details['icon']); ?>"></i>
+        <!-- Course Details Dialog Modals -->
+        <div id="courseModalsContainer">
+            <?php foreach ($courses_from_db as $index => $course):
+                $c_name = $course['course_name'];
+                $full_name = $course_full_names[$c_name] ?? $c_name;
+                $details = $course_details_map[$full_name] ?? $course_details_map[$c_name] ?? $default_details;
+                $modal_id = !empty($course['course_id']) ? $course['course_id'] : ($index + 1);
+            ?>
+                <div class="modal fade" id="courseModal_<?php echo $modal_id; ?>" tabindex="-1" aria-labelledby="courseModalLabel_<?php echo $modal_id; ?>" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered modal-lg">
+                        <div class="modal-content rounded-4 border-0 shadow">
+                            <div class="modal-header border-bottom px-4 py-3 bg-light rounded-top-4">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="rounded-circle bg-white shadow-sm d-flex align-items-center justify-content-center flex-shrink-0" style="width: 44px; height: 44px; font-size: 18px;">
+                                        <i class="fa-solid <?php echo e($details['icon']); ?>"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="modal-title fw-bold text-dark mb-0" id="courseModalLabel_<?php echo $modal_id; ?>"><?php echo e($full_name); ?></h5>
+                                        <?php if ($c_name !== $full_name): ?>
+                                            <small class="text-muted"><?php echo e($c_name); ?></small>
+                                        <?php endif; ?>
+                                    </div>
                                 </div>
-                                <h4 class="card-title fw-bold text-dark mb-0 fs-5"><?php echo e($full_name); ?></h4>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
+                            <div class="modal-body p-4">
+                                <!-- Course Meta Badges / Cards -->
+                                <div class="row g-3 mb-4">
+                                    <div class="col-6 col-md-3">
+                                        <div class="p-3 rounded-3 bg-light text-center h-100 border border-light-subtle">
+                                            <span class="text-muted small d-block mb-1"><i class="fa-solid fa-building-columns text-primary me-1"></i>Department</span>
+                                            <strong class="text-dark small d-block"><?php echo e($course['department']); ?></strong>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <div class="p-3 rounded-3 bg-light text-center h-100 border border-light-subtle">
+                                            <span class="text-muted small d-block mb-1"><i class="fa-regular fa-clock text-primary me-1"></i>Duration</span>
+                                            <strong class="text-dark small d-block"><?php echo e($details['duration']); ?></strong>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <div class="p-3 rounded-3 bg-light text-center h-100 border border-light-subtle">
+                                            <span class="text-muted small d-block mb-1"><i class="fa-solid fa-users text-success me-1"></i>Total Intake</span>
+                                            <strong class="text-dark small d-block"><?php echo e($course['total_seats'] ?? 60); ?> Seats</strong>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <div class="p-3 rounded-3 bg-light text-center h-100 border border-light-subtle">
+                                            <span class="text-muted small d-block mb-1"><i class="fa-solid fa-calendar-check text-info me-1"></i>Intake Term</span>
+                                            <strong class="text-dark small d-block"><?php echo e($course['semester'] ?? 'Semester I'); ?></strong>
+                                        </div>
+                                    </div>
+                                </div>
 
-                            <div class="mb-3 pb-3 border-bottom text-muted small">
-                                <i class="fa-regular fa-clock me-1 text-primary"></i> <strong>Duration:</strong> <?php echo e($details['duration']); ?>
+                                <!-- Eligibility Criteria -->
+                                <div class="mb-4">
+                                    <h6 class="fw-bold text-dark d-flex align-items-center gap-2 mb-2">
+                                        <i class="fa-solid fa-graduation-cap text-secondary"></i>
+                                        <span>Eligibility Criteria</span>
+                                    </h6>
+                                    <div class="p-3 rounded-3 bg-light border border-light-subtle">
+                                        <p class="text-muted small mb-0" style="line-height: 1.6;"><?php echo e($details['eligibility']); ?></p>
+                                    </div>
+                                </div>
 
+                                <!-- Key Subjects & Curriculum -->
+                                <div>
+                                    <h6 class="fw-bold text-dark d-flex align-items-center gap-2 mb-2">
+                                        <i class="fa-solid fa-list-check text-success"></i>
+                                        <span>Key Subjects & Curriculum Modules</span>
+                                    </h6>
+                                    <div class="row g-2">
+                                        <?php foreach ($details['curriculum'] as $item): ?>
+                                            <div class="col-12 col-sm-6">
+                                                <div class="d-flex align-items-center gap-2 p-2.5 rounded-2 bg-light border border-light-subtle small text-dark">
+                                                    <i class="fa-solid fa-circle-check text-success flex-shrink-0"></i>
+                                                    <span><?php echo e($item); ?></span>
+                                                </div>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
                             </div>
-
-                            <div class="mb-3">
-                                <h6 class="fw-bold text-dark small mb-1"><i class="fa-solid fa-graduation-cap me-1 text-secondary"></i>Eligibility:</h6>
-                                <p class="text-muted small mb-0" style="line-height: 1.5;"><?php echo e($details['eligibility']); ?></p>
-                            </div>
-
-                            <div class="flex-grow-1">
-                                <h6 class="fw-bold text-dark small mb-2"><i class="fa-solid fa-list-check me-1 text-success"></i>Key Subjects:</h6>
-                                <ul class="list-unstyled mb-0">
-                                    <?php foreach ($details['curriculum'] as $item): ?>
-                                        <li class="small text-muted mb-1.5 d-flex align-items-start">
-                                            <i class="fa-solid fa-circle-check text-success me-2 mt-1" style="font-size: 11px;"></i>
-                                            <span><?php echo e($item); ?></span>
-                                        </li>
-                                    <?php endforeach; ?>
-                                </ul>
+                            <div class="modal-footer border-top px-4 py-3 bg-light rounded-bottom-4 d-flex justify-content-between align-items-center">
+                                <button type="button" class="btn btn-outline-secondary px-4 fw-semibold" data-bs-dismiss="modal">Close</button>
+                                <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'student'): ?>
+                                    <a href="<?php echo app_url('student/apply.php'); ?>" class="btn btn-primary px-4 fw-bold d-inline-flex align-items-center gap-2">
+                                        <i class="fa-solid fa-paper-plane"></i> Apply for Course
+                                    </a>
+                                <?php else: ?>
+                                    <a href="<?php echo app_url('student_register.php'); ?>" class="btn btn-primary px-4 fw-bold d-inline-flex align-items-center gap-2">
+                                        <i class="fa-solid fa-user-plus"></i> Apply for Admission
+                                    </a>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
@@ -253,6 +363,16 @@ include 'includes/header.php';
                 }
             });
         }
+
+        // Enable keyboard activation (Enter or Space key) for accessible clickable course cards
+        document.querySelectorAll('.course-card-clickable').forEach(card => {
+            card.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    this.click();
+                }
+            });
+        });
     });
 </script>
 

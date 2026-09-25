@@ -45,8 +45,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 $new_user_id = $pdo->lastInsertId();
 
-                login_user($new_user_id, 'student', $name, $email);
-                app_redirect('student/dashboard.php');
+                $registration_success = true;
+                $registered_name = $name;
+                $registered_email = $email;
             }
         } catch (PDOException $e) {
             $error_msg = "Database Error: " . $e->getMessage();
@@ -130,6 +131,14 @@ include 'includes/header.php';
                         <p class="text-muted small mb-0">Join State College of Technology Admission Portal</p>
                     </div>
 
+                    <?php if (!empty($registration_success)): ?>
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fa-solid fa-circle-check me-2"></i>
+                            <strong>Registration successful!</strong>
+                            <div class="mt-1 small">Redirecting to login page... If not redirected, <a href="login.php?role=student&registered=success&email=<?php echo urlencode($registered_email ?? ''); ?>" class="alert-link fw-bold">click here to login</a>.</div>
+                        </div>
+                    <?php endif; ?>
+
                     <?php render_alert($error_msg, 'danger', false, true); ?>
 
                     <form action="student_register.php" method="POST">
@@ -207,5 +216,15 @@ function togglePassword(inputId, btn) {
     }
 }
 </script>
+
+<?php if (!empty($registration_success)): ?>
+<script>
+    alert("Registration successful! Please login to continue.");
+    window.location.href = "login.php?role=student&registered=success&email=<?php echo urlencode($registered_email ?? ''); ?>";
+</script>
+<noscript>
+    <meta http-equiv="refresh" content="1;url=login.php?role=student&registered=success&email=<?php echo urlencode($registered_email ?? ''); ?>">
+</noscript>
+<?php endif; ?>
 
 <?php include 'includes/footer.php'; ?>

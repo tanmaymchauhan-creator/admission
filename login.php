@@ -6,8 +6,14 @@ require_once 'includes/auth.php';
 redirect_if_logged_in();
 
 $error_msg = '';
+$success_msg = '';
 
 $role = normalize_role($_GET['role'] ?? 'student');
+$email = trim($_GET['email'] ?? '');
+
+if (isset($_GET['registered']) && $_GET['registered'] === 'success') {
+    $success_msg = "Registration successful! Please login with your email and password.";
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email'] ?? '');
@@ -176,6 +182,7 @@ include 'includes/header.php';
                         </a>
                     </div>
 
+                    <?php render_alert($success_msg, 'success', false, true); ?>
                     <?php render_alert($error_msg, 'danger', false, true); ?>
 
                     <form action="login.php?role=<?php echo urlencode($role); ?>" method="POST">
@@ -187,7 +194,7 @@ include 'includes/header.php';
                             </label>
                             <div class="input-group auth-input-group">
                                 <span class="input-group-text"><i class="fa-solid fa-envelope"></i></span>
-                                <input type="email" class="form-control" id="email" name="email" placeholder="name@domain.edu" value="<?php echo e($email ?? ''); ?>" required autofocus>
+                                <input type="email" class="form-control" id="email" name="email" placeholder="name@domain.edu" value="<?php echo e($email ?? ''); ?>" required <?php echo empty($email) ? 'autofocus' : ''; ?>>
                             </div>
                         </div>
 
@@ -197,7 +204,7 @@ include 'includes/header.php';
                             </div>
                             <div class="input-group auth-input-group has-toggle">
                                 <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
-                                <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password" required>
+                                <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password" required <?php echo !empty($email) ? 'autofocus' : ''; ?>>
                                 <button type="button" class="password-toggle-btn" onclick="togglePassword('password', this)" title="Toggle password visibility">
                                     <i class="fa-solid fa-eye"></i>
                                 </button>
